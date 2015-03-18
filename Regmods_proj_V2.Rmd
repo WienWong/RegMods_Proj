@@ -1,0 +1,70 @@
+---
+title: "Regression Models Report"
+author: "Wien Wong"
+date: "Wednesday, March 18, 2015"
+output:
+  pdf_document: default
+  html_document:
+    self_contained: no
+---
+
+### Abstract
+In this report, a dataset 'mtcars' collected from the 1974 Motor Trend US magazine was used to explore whether an automatic or a manual transmission have different impact on miles per gallon depletion. And how much is the difference between these two transmissions? Besides, an optimal estimate of multivariate regression model was tried to establish, and is finally validated by diagnostics plots. It is concluded that weight, displacement and number of cylinders play important role on miles per US gallon.
+
+### Data Process and Analysis
+Data variables explanation can be read in appendix. Let's try a boxplot to view if there is any difference between the two transmissions.
+
+```{r, fig.width=4, fig.height=3.5}
+data(mtcars)
+boxplot(mtcars$mpg ~ mtcars$am, xlab = "Transmission (0 = Automatic, 1 = Manual)", 
+        ylab = "MPG", main = "MPG vs. Transmission", col = "red")
+```
+
+The figure illustrates that manual transmission shows a better performance regarding MPG in general. To confirm the difference, a t-test is performed with the null hypothesis being that there is no difference in the mean MPG for automatic and manual transmission (code attached below). The p-value of 0.001373638 is far less than 0.05 thus the null hypothesis is rejected. There indeed is difference between the two transmissions regarding MPG. Such difference can also be quantified by sample estimates of the two transmissions, with mean of 17.14737 in automatic group and mean of 24.39231 in manual transmission group.
+```r
+t.test(mtcars$mpg ~ mtcars$am)$p.value
+t.test(mtcars$mpg ~ mtcars$am)$estimate
+```
+### Regression Model and Residual Diagnostic Plot 
+There are 10 predicted variables and some must play minor roles to MPG consumption. Thus analysis of variances is necessary.
+```r
+summary(aov(mpg ~ ., data = mtcars)) # results hidden but shown in appendix
+```
+Variables with p-value less than 0.5 are more important. Thereby, 4 fit models may be proposed here.
+```{r}
+fit1 <- lm(mpg ~ cyl + wt, mtcars); fit2 <- lm(mpg ~ cyl + wt + disp, mtcars)
+fit3 <- lm(mpg ~ cyl + wt + am, mtcars); fit4 <- lm(mpg ~ cyl + wt + disp + am, mtcars)
+```
+Summary of these four fit models are attached in the appendix. The largest adjusted r-squared value among the four models is 0.8327, corresponding to the `fit4` model. It indicates that the `fit4` model can explain up to 83.27% of the total variation. Therefore, `fit4` is selected as the final multivariate model. 
+
+Last, residual diagnostic plot was generated in the second figure. The Residuals vs Fitted plot shows residuals against fitted values. If any pattern is apparent in the points on this plot, then the linear regression model may not be suitable in this case. The Normal Q-Q plot shows the residuals are normally distributed. The Residuals vs Leverage plot refers to the standardized residuals against leverage. The standardized residuals are centered around zero. On this plot, the red smoothed line stays close to the horizontal gray dashed line and that no points have too much leverage (a large Cook's distance). 
+```{r, fig.width=5, fig.height=4}
+par(mfrow = c(2,2), mar = c(3,1,2,2)); plot(fit4)
+```
+
+## Appendix
+
+Variables Explanation
+
+- `mpg`: Miles per US gallon
+- `cyl`: Number of cylinders
+- `disp`: Displacement (cubic inches)
+- `hp`: Gross horsepower
+- `drat`: Rear axle ratio
+- `wt`: Weight (lb / 1000)
+- `qsec`: 1 / 4 mile time
+- `vs`: V/S
+- `am`: Transmission (0 = automatic, 1 = manual)
+- `gear`: Number of forward gears
+- `carb`: Number of carburetors
+
+```{r}
+summary(aov(mpg ~ ., data = mtcars))
+```
+
+```{r}
+summary(fit1)
+summary(fit2)
+summary(fit3)
+summary(fit4)
+```
